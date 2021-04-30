@@ -1,0 +1,222 @@
+var wormGame = function(width, height) {
+	this.myMap = new wormMap(width, height);
+	this.myWorm = new worm(width, height);
+	this.myFood = new food(width, height);
+	this.myOb = new obstacle(width, height);
+	this.gameOver = null;
+	this.score = document.getElementById("worm_score");
+	this.cnt = document.getElementById("worm_cnt");
+}
+
+wormGame.prototype.init = function() {
+	var _this = this;
+	
+	_this.myMap.mapMain();
+	_this.myOb.obsMain();
+}
+
+wormGame.prototype.startGame = function() {
+	var _this = this;
+
+	_this.gameOver = setInterval(function() {
+		_this.myMap.mapMain();
+		_this.myOb.obsMain();
+		_this.myWorm.wormMain();
+		_this.myWorm.move();
+		_this.myFood.foodMain();
+		_this.collision();
+	}, 1000/15);
+	window.addEventListener("keydown", function(e){_this.myWorm.keyPush(e)});
+}
+
+wormGame.prototype.collision = function() {
+	var _this = this;
+	var wormX = _this.myWorm.positionX;
+	var wormY = _this.myWorm.positionY;
+	var foodX = _this.myFood.foodX;
+	var foodY = _this.myFood.foodY;
+	var obsX = _this.myOb.obstacleX ;
+	var obsY = _this.myOb.obstacleY;
+	var wormArr = _this.myWorm.wormArr;
+	
+	if(wormX == foodX && wormY == foodY) {
+		console.log("충돌");
+		_this.myWorm.wormLength++;
+		_this.myFood.totalCnt++;
+		_this.myFood.foodX = Math.floor(Math.random() * _this.myFood.gridSize);
+		_this.myFood.foodY = Math.floor(Math.random() * _this.myFood.gridSize);
+		
+		_this.cnt.innerHTML = _this.myFood.totalCnt;
+		_this.score.innerHTML = _this.myFood.totalCnt * 500;
+	}
+	if(wormX == obsX && wormY == obsY) {
+		setTimeout(function() {_this.gameEnd();}, 1000/12);
+		return false;
+	}
+	if (wormX < 0) {
+		setTimeout(function() {_this.gameEnd();}, 1000/12);
+		return false;
+	}
+	if (wormX > _this.myWorm.gridSize - 1) {
+		setTimeout(function() {_this.gameEnd();}, 1000/12);
+		return false;
+	}
+	if (wormY < 0) {
+		setTimeout(function() {_this.gameEnd();}, 1000/12);
+		return false;
+	}
+	if (wormY > _this.myWorm.gridSize - 1) {
+		setTimeout(function() {_this.gameEnd();}, 1000/12);
+		return false;
+	}
+	if(wormArr.length > 1) {
+		if(wormArr[1].dir == "L" && wormArr[0].dir == "R") {
+			setTimeout(function() {_this.gameEnd();}, 1000/12);
+			return false;
+		}
+		if(wormArr[1].dir == "R" && wormArr[0].dir == "L") {
+			setTimeout(function() {_this.gameEnd();}, 1000/12);
+			return false;
+		}
+		if(wormArr[1].dir == "D" && wormArr[0].dir == "U") {
+			setTimeout(function() {_this.gameEnd();}, 1000/12);
+			return false;
+		}
+		if(wormArr[1].dir == "U" && wormArr[0].dir == "D") {
+			setTimeout(function() {_this.gameEnd();}, 1000/12);
+			return false;
+		}
+	}
+}
+
+wormGame.prototype.gameEnd = function() {
+	var _this = this;
+	clearInterval(_this.gameOver);
+	window.removeEventListener("keydown", function(e){_this.myWorm.keyPush(e)});
+	alert("GAMEOVER");
+	location.reload();
+	/*_this.cnt.innerHTML = 0;
+	_this.score.innerHTML = 0;
+	_this.myMap.mapMain();
+	_this.myWorm.wormArr = [];
+	_this.myWorm.positionX = 0;
+	_this.myWorm.positionY = 0;*/
+}
+var wormProp = function(width, height) {
+	this.canvas = document.getElementById("worm_canvas");
+	this.ctx = worm_canvas.getContext("2d");
+	this.width = width;
+	this.height = height;
+	this.wormArr = [];
+	this.gridSize = Math.floor(Math.sqrt(width));
+}
+
+var wormMap = function wormMap(width, height) {
+	wormProp.apply( this, arguments );
+}
+
+wormMap.prototype = Object.create( wormProp.prototype );
+wormMap.prototype.constructor = wormMap;
+
+wormMap.prototype.mapMain = function() {
+	this.canvas.width = this.width;
+	this.canvas.height = this.height;
+	this.ctx.fillStyle = "#000000";
+	this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+}
+
+var worm = function worm(width, height){
+	wormProp.apply( this, arguments );
+	  this.positionX = 0;
+	  this.positionY = 0;
+	  this.dx = 0;
+	  this.dy = 0;
+	  this.dir = null;
+	  /*this.wormArr = [{
+		  x : this.positionX
+		, y : this.positionY
+	  }];*/
+	  this.wormLength = 1;
+	}
+	worm.prototype = Object.create( wormProp.prototype );
+	worm.prototype.constructor = worm;
+	
+worm.prototype.wormMain = function() { 
+	
+	var wormWidth = this.gridSize;
+	var wormHeight = this.gridSize;
+	
+		this.ctx.fillStyle = "#FAECC5";
+		for(var i = 0; i < this.wormArr.length; i++) {
+			this.ctx.fillRect(this.wormArr[i].x * wormWidth, this.wormArr[i].y * wormHeight, wormWidth, wormHeight);
+		}
+		
+		this.wormArr.push({
+			  x : this.positionX
+			, y : this.positionY
+			, dir : this.dir
+		});
+		
+		if(this.wormArr.length > this.wormLength) {
+			this.wormArr.shift();
+		}
+}
+
+worm.prototype.move = function() {
+	this.positionX += this.dx;
+	this.positionY += this.dy;
+}
+
+worm.prototype.keyPush = function(e) {
+	 if (e.keyCode == 37){ // left
+		 this.dx = -1;
+		 this.dy = 0;
+		 this.dir = "L";
+    }
+    else if (e.keyCode == 38){ // up
+   	 	 this.dx = 0;
+		 this.dy = -1;
+		 this.dir = "U";
+    }
+    else if (e.keyCode == 39){ // right
+   	 	 this.dx = 1;
+		 this.dy = 0;
+		 this.dir = "R";
+    }
+    else if (e.keyCode == 40){ // down
+    	 this.dx = 0;
+		 this.dy = 1;
+		 this.dir = "D";
+    }
+}
+
+var food = function food(width, height){
+	wormProp.apply( this, arguments );
+	  this.foodX =  Math.floor(Math.random() * this.gridSize);
+	  this.foodY =  Math.floor(Math.random() * this.gridSize);
+	  this.totalCnt = 0;
+	}
+	food.prototype = Object.create( wormProp.prototype );
+	food.prototype.constructor = food;
+	
+food.prototype.foodMain = function() {	
+	var foodWidth = this.gridSize;
+	var foodHeight = this.gridSize;
+	this.ctx.fillStyle = "#FF0000";
+	this.ctx.fillRect(this.foodX * foodWidth, this.foodY * foodHeight , foodWidth, foodHeight);
+}
+
+var obstacle = function obstacle(width, height){
+	wormProp.apply( this, arguments );
+	  this.obstacleX =  Math.floor(Math.random() * this.gridSize);
+	  this.obstacleY =  Math.floor(Math.random() * this.gridSize);
+	}
+	obstacle.prototype = Object.create( wormProp.prototype );
+	obstacle.prototype.constructor = obstacle;
+	
+obstacle.prototype.obsMain = function() {	
+	var obWidth = this.gridSize;
+	var obHeight = this.gridSize;
+	this.ctx.fillStyle = "#1DDB16";
+	this.ctx.fillRect(this.obstacleX * obWidth, this.obstacleY * obHeight, obWidth, obHeight);
+}

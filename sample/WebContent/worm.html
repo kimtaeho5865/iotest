@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script type="text/javascript" src="../js/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="../js/worm.js"></script>
+<script>
+$(document).ready(function() {
+	
+});
+var gameManager;
+var myMap;
+var myWorm;
+function onLoad(){
+	gameManager = new wormGame(400, 400);
+	
+	gameManager.init();
+}
+
+function gameStart() {
+	gameManager.startGame();
+}
+</script>
+<style type = "text/css">
+.worm_canvas {
+	border : 1px solid #FF0000;
+}
+
+.eat_count {
+	display : inline-block;
+	width : 150px;
+	height : 30px;
+}
+
+.game_score {
+	display : inline-block;
+	width : 150px;
+	height : 30px;
+}
+
+</style>
+</head>
+<body onload = "onLoad()">
+<div>
+	<div class = "eat_count">먹이 : <span id = "worm_cnt">0</span></div>
+	<div class = "game_score">SCORE : <span id = "worm_score">0</span></div>
+</div>
+<canvas id="worm_canvas" class = "worm_canvas"></canvas>
+<div>
+<button id = "btnStart" class = "" onClick = "gameStart()">START</button>
+</div>
+</body>
+</html>
